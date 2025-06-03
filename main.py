@@ -64,7 +64,7 @@ parser = WebhookParser(channel_secret)
 # --- ArXiv Agent Definition ---
 root_agent = Agent(
     name="arxiv_agent",
-    model="gemini-2.0-flash", # Consistent with previous agent's model choice
+    model="gemini-2.0-flash",  # Consistent with previous agent's model choice
     description="Agent specialized in searching arXiv, summarizing papers, and answering questions about them.",
     instruction="""
         You are an AI assistant specializing in interacting with the arXiv repository.
@@ -142,6 +142,19 @@ async def handle_callback(request: Request):
             msg = event.message.text
             user_id = event.source.user_id
             print(f"Received message: {msg} from user: {user_id}")
+
+            # --- Hugging Face paper URL auto-convert to arXiv ---
+            import re
+
+            hf_paper_pattern = r"https://huggingface.co/papers/(\\d{4}\\.\\d{5})"
+            match = re.search(hf_paper_pattern, msg)
+            if match:
+                arxiv_id = match.group(1)
+                msg = f"arXiv:{arxiv_id}"
+                print(
+                    f"Detected Hugging Face paper URL. Converted to arXiv ID: {arxiv_id}"
+                )
+            # ---------------------------------------------------
 
             # Use the user's prompt directly with the agent
             response = await call_agent_async(msg, user_id)
